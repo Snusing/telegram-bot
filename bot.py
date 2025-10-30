@@ -1,10 +1,8 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 TOKEN = "8321950419:AAEyAnjqPXmMDpDNmQWJ048cnp6-ibVzRhs"
-ADMIN_ID = 7927748815  # Įrašytas tavo ID ✅
-
-TEMPLATE_URL = "https://www.vinted.lt/items/7444829312/edit"
+ADMIN_ID = 7927748815  # <---- tavo telegram ID
 
 PRODUCTS = {
     "syberia": 5,
@@ -14,7 +12,7 @@ PRODUCTS = {
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Sveikas 👋\n"
+        "Sveikas 👋\n\n"
         "Įrašyk produktą ir kiekį, pvz:\n\n"
         "Syberia 3\n"
         "Pablo 2\n"
@@ -22,41 +20,48 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def handle_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id == ADMIN_ID:
-        text = update.message.text.lower().strip()
-        parts = text.split()
+    user = update.message.from_user
+    text = update.message.text.lower().strip()
+    parts = text.split()
 
-        if len(parts) != 2:
-            return await update.message.reply_text("⚠️ Formatas: Produktas Kiekis (pvz: Syberia 3)")
+    if len(parts) != 2:
+        return await update.message.reply_text("⚠️ Formatas: Produktas Kiekis (pvz: Syberia 3)")
 
-        product, quantity_str = parts
+    product, quantity_str = parts
 
-        if product not in PRODUCTS:
-            return await update.message.reply_text("❌ Tokio produkto nėra. Galimi: Syberia, Pablo, Velo")
+    if product not in PRODUCTS:
+        return await update.message.reply_text("❌ Tokio produkto nėra. Galimi: Syberia, Pablo, Velo")
 
-        if not quantity_str.isdigit():
-            return await update.message.reply_text("❌ Kiekis turi būti skaičius")
+    if not quantity_str.isdigit():
+        return await update.message.reply_text("❌ Kiekis turi būti skaičius")
 
-        quantity = int(quantity_str)
-        total_price = PRODUCTS[product] * quantity
+    quantity = int(quantity_str)
+    total_price = PRODUCTS[product] * quantity
 
-        # Paruošti mygtuką
-        final_url = f"{TEMPLATE_URL}?title={product}+x{quantity}&price={total_price}"
-        button = InlineKeyboardButton("✅ Patvirtinti Vinted skelbimą", url=final_url)
-        keyboard = InlineKeyboardMarkup([[button]])
+    # klientui rodoma nuoroda su jų order info
+    link = f"https://www.vinted.lt/items/7444829312/edit?title={product}+x{quantity}&price={total_price}"
 
-        await update.message.reply_text(
-            f"✅ Užsakymas:\n\n"
+    # Siunčiame klientui
+    await update.message.reply_text(
+        f"✅ Užsakymas!\n\n"
+        f"📦 Produktas: {product.capitalize()}\n"
+        f"🔢 Kiekis: {quantity}\n"
+        f"💶 Kaina: {total_price}€\n\n"
+        f"👇 Paspausk ir patvirtink skelbimą:\n{link}"
+    )
+
+    # Siunčiame admin
+    await context.bot.send_message(
+        chat_id=ADMIN_ID,
+        text=(
+            f"📩 *Naujas užsakymas*\n"
+            f"👤 Vartotojas: {user.first_name}\n"
             f"📦 Produktas: {product.capitalize()}\n"
             f"🔢 Kiekis: {quantity}\n"
-            f"💶 Kaina: {total_price}€\n\n",
-            reply_markup=keyboard
-        )
-    else:
-        await update.message.reply_text("❌ Tu nesi administratorius.")
-
-async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("⚠️ Nesupratau. Parašyk pvz: Syberia 3")
+            f"💶 Kaina: {total_price}€"
+        ),
+        parse_mode="Markdown"
+    )
 
 def main():
     app = Application.builder().token(TOKEN).build()
