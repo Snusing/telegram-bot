@@ -1,5 +1,5 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 TOKEN = "8321950419:AAEyAnjqPXmMDpDNmQWJ048cnp6-ibVzRhs"
 ADMIN_ID = 7927748815
@@ -40,7 +40,7 @@ async def handle_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"✅ Užsakymas priimtas!\n"
         f"📦 {product.capitalize()} x{quantity}\n"
         f"💶 {total_price}€\n"
-        f"⚠️ Palaukite, kol pardavėjas patvirtins užsakymą."
+        f"⚠️ Palaukite, kol pardavėjas patvirtins."
     )
 
     await context.bot.send_message(
@@ -52,7 +52,7 @@ async def handle_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"📦 {product.capitalize()} x{quantity}\n"
             f"💶 {total_price}€\n\n"
             f"🧾 Kai paruoši linką, parašyk:\n"
-            f`/send {user.id} LINKAS`
+            f"/send {user.id} LINKAS"
         ),
         parse_mode="Markdown"
     )
@@ -88,3 +88,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
